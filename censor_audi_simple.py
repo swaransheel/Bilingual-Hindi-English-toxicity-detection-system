@@ -7,6 +7,8 @@ from pydub.generators import Sine
 from faster_whisper import WhisperModel
 from transformers import pipeline
 import langid
+from nltk.corpus import stopwords
+
 import torch
 
 def generate_beep(duration_ms: int) -> AudioSegment:
@@ -543,6 +545,71 @@ def determine_language(whisper_language, words):
         # Fallback to langid for confirmation
         detected = langid.classify(" ".join([w['word'] for w in words]))[0]
         return 'hi' if detected in indian_languages else 'en'
+    
+
+
+def censor_audio_file(input_path: str, output_path: str):
+    class Args:
+        input = input_path
+        output = output_path
+        model = 'base'
+        device = 'cpu'
+        threshold = 0.4
+        min_votes = 2
+        tox_model = 'unitary/toxic-bert'
+        language = 'auto'
+        blocklist = None
+        report = None
+        permissive = False
+        verbose = False
+
+    args = Args()
+
+    # Everything inside your main() but using args directly, not parser
+
+    # Ensure output directory exists
+    odir = os.path.dirname(args.output) or '.'
+    os.makedirs(odir, exist_ok=True)
+
+    if args.verbose:
+        print(f"[+] Transcribing {args.input} with Whisper-{args.model} on {args.device}")
+
+    # Transcribe and detect
+    words, whisper_language = transcribe_words(args.input, args.model, args.device)
+    language = determine_language(whisper_language, words) if args.language == 'auto' else args.language
+
+    custom_blocklist = load_custom_blocklist(args.blocklist)
+
+    device_id = 0 if args.device == 'cuda' else -1
+    detector = ToxicDetector(device_id, args.tox_model)
+
+    try:
+        detector.load_models_for_language(language)
+
+        spans = detector.detect_toxic_content(
+            words,
+            language,
+            args.threshold,
+            args.min_votes,
+            strict_mode=not args.permissive,
+            custom_blocklist=custom_blocklist
+        )
+
+        merged_spans = merge_spans_with_words(spans)
+
+        audio = AudioSegment.from_file(args.input)
+        censored = censor_audio(audio, merged_spans)
+
+        ext = os.path.splitext(args.output)[1].lstrip('.') or 'mp3'
+        censored.export(args.output, format=ext)
+
+        print(f"[✓] Saved censored audio to {args.output}")
+    
+    finally:
+        detector.unload_models()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 
 
 def main():

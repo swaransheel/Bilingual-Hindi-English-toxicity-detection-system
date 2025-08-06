@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Upload Your Audio</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gradient-to-b from-white to-gray-50 min-h-screen flex flex-col">
+
+  <!-- Hero Header -->
+  <header class="w-full text-center py-16 bg-white bg-opacity-70 backdrop-blur-md">
+    <h1 class="text-5xl md:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
+      Upload and Censor Your Audio
+    </h1>
+    <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+      Automatically detect toxic content in your audio files and download a clean, censored version in seconds.
+    </p>
+  </header>
+
+  <!-- Main Section -->
+  <main class="flex-grow flex flex-col items-center justify-center p-8">
+
+    <!-- Upload Form -->
+    <form 
+      id="uploadForm"
+      action="{{ url_for('upload_file') }}" 
+      method="POST" 
+      enctype="multipart/form-data" 
+      class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-2xl space-y-8 transition hover:shadow-3xl"
+    >
+      <div class="flex flex-col items-center space-y-4">
+        <label class="block text-lg font-medium text-gray-700 mb-2">Select an Audio File (.mp3, .wav)</label>
+
+        <label for="file-upload" class="flex flex-col items-center justify-center w-full px-6 py-8 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
+          <svg class="w-12 h-12 text-blue-400 mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M16 8l-4-4m0 0l-4 4m4-4v12" />
+          </svg>
+          <span class="text-gray-600 font-semibold">Click to select a file</span>
+          <input id="file-upload" name="file" type="file" class="hidden" required>
+        </label>
+      </div>
+
+      <div class="flex justify-center pt-4">
+        <button 
+          type="submit" 
+          class="px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-full shadow-md transition transform hover:-translate-y-1 hover:shadow-lg"
+        >
+          🚀 Upload & Process
+        </button>
+      </div>
+    </form>
+
+    <!-- Spinner (Initially Hidden) -->
+    <div id="loadingSpinner" class="hidden flex flex-col items-center justify-center space-y-4 mt-10">
+      <svg class="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+      </svg>
+      <p class="text-lg font-medium text-blue-700">Processing your audio... Please wait 🚀</p>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center text-gray-400 text-sm py-8">
+    <a href="{{ url_for('home') }}" class="hover:underline">← Back to Home</a>
+  </footer>
+
+  <!-- JavaScript at bottom -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('uploadForm');
+      const loading = document.getElementById('loadingSpinner');
+
+      form.addEventListener('submit', function() {
+        form.classList.add('hidden');        // Hide the form
+        loading.classList.remove('hidden');  // Show the spinner
+      });
+    });
+  </script>
+
+</body>
+</html>
